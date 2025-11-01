@@ -85,31 +85,43 @@ def calculate_class_probabilities(summaries, row):
 
 
 
+
+
+
+
 def nb_train(train_data):
     ### Uncomment two lines below and you will pass the train model unit test ###
-    # model = summarize_by_class(train_data)
-    # return model
-    return None
+    model = summarize_by_class(train_data)
+    return model
+    
 
 #######
 # Complete this functions:
 # Predict the class for a given row
 #######
 def nb_predict(summaries, row):
-    
-    return 0
+    probabilities = calculate_class_probabilities(summaries, row)
+    best_label, best_prob = None, -1
+    for class_value, probability in probabilities.items():
+        if best_label is None or probability > best_prob:
+            best_prob = probability
+            best_label = class_value
+    return best_label
+
+
+
+
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Naive Bayes Classifier")
-    parser.add_argument("--train-csv", help="Training data in CSV format. Labels are stored in the last column.", required=True)
-    parser.add_argument("--test-csv", help="Test data in CSV format", required=True)
-    args = parser.parse_args()
-
     # Load training CSV file. The labels are stored in the last column
-    train_df = pd.read_csv(args.train_csv)
+    train_df = pd.read_csv(TRAIN_FILE)
     train_data = train_df.to_numpy()
 
-    test_df = pd.read_csv(args.test_csv)
+
+     # Load test CSV file. The labels are stored in the last column
+
+    test_df = pd.read_csv(TEST_FILE)
     #test_data = test_df.to_numpy()
     test_data = test_df.iloc[:,:-1].to_numpy()
     test_label = test_df.iloc[:,-1:].to_numpy() # Split labels in last column
@@ -117,6 +129,7 @@ if __name__ == "__main__":
     # Training label preprocessing
     label_id_dict = str_column_to_int(train_data, len(train_data[0])-1)
     id_label_dict = {value: key for key, value in label_id_dict.items()}
+    #反向對照字典的主要用途是在最後進行預測時，將數值型的類別標籤(0,1,2)轉換回原始的類別名稱
 
     # Training
     #model = summarize_by_class(train_data)
@@ -132,9 +145,10 @@ if __name__ == "__main__":
     rows, columns = test_data.shape
     for i in range(rows):
         y_p = nb_predict(model, test_data[i])
-        predictions.append([id_label_dict[y_p]])
+        predictions.append([id_label_dict[y_p]])# 將數值型標籤轉換回原始類別名稱並存入預測結果列表
 
     # Calculate accuracy
     result = np.array(predictions) == test_label
-    accuracy = sum(result == True) / len(result)
+    #accuracy = int(sum(result == True)) / len(result)
+    accuracy = np.mean(result)  # 使用 np.mean() 替代原本的算法
     print('Evaluate Naive Bayes on Iris Flower dataset. Accuracy = %.2f' % accuracy)
